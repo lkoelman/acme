@@ -12,3 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# HACK: support jax 0.4.29
+import jax
+jax.random.KeyArray = 'KeyArray'
+
+class MockModule:
+    pass
+
+if not hasattr(jax, 'xla'):
+    jax.xla = MockModule()
+    jax.xla.DeviceArray = jax.Array
+
+# jax.interpreters.xla.DeviceArray = jax.Array

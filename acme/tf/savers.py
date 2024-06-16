@@ -25,7 +25,6 @@ from absl import logging
 from acme import core
 from acme.utils import signals
 from acme.utils import paths
-import sonnet as snt
 import tensorflow as tf
 import tree
 
@@ -282,7 +281,7 @@ class Snapshotter:
 
   def __init__(
       self,
-      objects_to_save: Mapping[str, snt.Module],
+      objects_to_save: Mapping[str, 'snt.Module'],
       *,
       directory: str = '~/acme/',
       time_delta_minutes: float = 30.0,
@@ -381,7 +380,7 @@ revived_types.register_revived_type(
     ])
 
 
-def make_snapshot(module: snt.Module):
+def make_snapshot(module: 'snt.Module'):
   """Create a thin wrapper around a module to make it snapshottable."""
   # Get the input signature as long as it has been created.
   input_signature = _get_input_signature(module)
@@ -407,7 +406,7 @@ def make_snapshot(module: snt.Module):
   snapshot.__call__.get_concrete_function(*input_signature)
 
   # If we are an RNN also save the initial-state generating function.
-  if isinstance(module, snt.RNNCore):
+  if isinstance(module, 'snt.RNNCore'):
     snapshot.initial_state = tf.function(module.initial_state)
     snapshot.initial_state.get_concrete_function(
         tf.TensorSpec(shape=(), dtype=tf.int32))
@@ -415,7 +414,7 @@ def make_snapshot(module: snt.Module):
   return snapshot
 
 
-def _get_input_signature(module: snt.Module) -> Optional[tf.TensorSpec]:
+def _get_input_signature(module: 'snt.Module') -> Optional[tf.TensorSpec]:
   """Get module input signature.
 
   Works even if the module with signature is wrapper into snt.Sequentual or
@@ -430,6 +429,7 @@ def _get_input_signature(module: snt.Module) -> Optional[tf.TensorSpec]:
   Returns:
     Input signature of the module or None if it's not available.
   """
+  import sonnet as snt  # pylint: disable=g-import-not-at-top
   if hasattr(module, '_input_signature'):
     return module._input_signature  # pylint: disable=protected-access
 
